@@ -12,8 +12,8 @@
 # macOS has 3.2); every library is linked statically except libSystem, which
 # every macOS carries, and the result runs on macOS 11 (MACOS_MIN) or later.
 #
-# Every input that decides what comes out is pinned in this file: the versions,
-# the commit or SHA-256 each source must match, and the component lists. CI
+# Every input that decides what comes out is pinned in this file: the tag of
+# each source, the commit it must stand for, and the component lists. CI
 # caches the result on a hash of this file, so changing any of it rebuilds.
 #
 # Writes, into the output directory:
@@ -52,21 +52,25 @@ if ((BASH_VERSINFO[0] * 100 + BASH_VERSINFO[1] < 404)); then
     exit 1
 fi
 
-FFMPEG_VERSION=9.0.2
+# Every source is cloned from its GitHub repository (the GitLab hosts refuse CI
+# runners, and git.ffmpeg.org drops long clones) at a tag, written exactly as
+# upstream names it, and the checkout is held to the commit that tag stands
+# for.
+FFMPEG_TAG=n9.0.2
 FFMPEG_COMMIT=946fcce07b6dcd0331c8cc609192aeff5e1924f8
-# FFmpeg, SVT-AV1, dav1d, libwebp and Opus come from their GitHub repositories
-# (the GitLab hosts refuse CI runners, and git.ffmpeg.org drops long clones),
-# so each checkout is held to the commit its tag stands for.
-SVTAV1_VERSION=v4.2.0
+SVTAV1_TAG=v4.2.0
 SVTAV1_COMMIT=9292ec8e32bce26f781f277ec8739b53426c4300
-DAV1D_VERSION=1.5.4
+DAV1D_TAG=1.5.4
 DAV1D_COMMIT=54706fc6bc0cdecab7e9593974a4039cc038fca7
-LIBWEBP_VERSION=v1.6.0
+LIBWEBP_TAG=v1.6.0
 LIBWEBP_COMMIT=4fa21912338357f89e4fd51cf2368325b59e9bd9
-OPUS_VERSION=1.6.1
+OPUS_TAG=v1.6.1
 OPUS_COMMIT=22244de5a79bd1d6d623c32e72bf1954b56235be
-ZLIB_VERSION=1.3.2
-ZLIB_SHA256=bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16
+ZLIB_TAG=v1.3.2
+ZLIB_COMMIT=da607da739fa6047df13e66a2af6b8bec7c2a498
+# The release tag (9.0.2-1), the source archive and NOTICE.txt name FFmpeg by
+# its version, without the n of its tags.
+FFMPEG_VERSION=${FFMPEG_TAG#n}
 
 # FFmpeg's own `av1` decoder is hardware-only, so libdav1d decodes AV1 and the
 # native one is left out. JPEG pictures are decoded by `mjpeg`; `webp` selects
@@ -98,7 +102,7 @@ mkdir -p "${1:-out}"
 out=$(realpath "${1:-out}")
 work=${WORK:-/tmp/euterpe-ffmpeg}
 prefix=$work/prefix
-zlib=$work/zlib-$ZLIB_VERSION
+zlib=$work/zlib
 
 # On x86_64 the target is named to CMake outright: a Windows shell can omit
 # PROCESSOR_ARCHITECTURE, CMake then detects an empty CPU name and Opus silently
@@ -112,19 +116,19 @@ case "$(uname -s)-$(uname -m)" in
             echo "error: build in an MSYS2 UCRT64 shell, not ${MSYSTEM:-MSYS}" >&2
             exit 1
         fi
-        platform=windows arch=x86_64 exe=.exe jobs=$(nproc) sha256=(sha256sum)
+        platform=windows arch=x86_64 exe=.exe jobs=$(nproc)
         cmake_target=(-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=x86_64)
         # Fully static: no MinGW runtime DLL may travel with the executables.
         link=(--extra-ldflags="-L$prefix/lib -flto=$jobs -O3" --extra-libs="-lstdc++ -static -static-libgcc -static-libstdc++")
         ;;
     Linux-x86_64)
-        platform=linux arch=x86_64 exe= jobs=$(nproc) sha256=(sha256sum)
+        platform=linux arch=x86_64 exe= jobs=$(nproc)
         cmake_target=(-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=x86_64)
         # Static but for glibc, which is not meant to be linked statically.
         link=(--extra-ldflags="-L$prefix/lib -static-libgcc -flto=$jobs -O3" --extra-libs="-lm -lpthread")
         ;;
     Darwin-arm64)
-        platform=macos arch=arm64 exe= jobs=$(sysctl -n hw.ncpu) sha256=(shasum -a 256)
+        platform=macos arch=arm64 exe= jobs=$(sysctl -n hw.ncpu)
         # clang reads this from the environment whichever build system starts
         # it, so no part is built for the build machine's own macOS.
         export MACOSX_DEPLOYMENT_TARGET=$MACOS_MIN
@@ -190,11 +194,6 @@ clone() { # url tag commit directory
     fi
 }
 
-fetch() { # url sha256 file
-    curl -fsSL --retry 3 -o "$3" "$1"
-    echo "$2  $3" | "${sha256[@]}" -c -
-}
-
 # Optimizations can also be silently disabled by feature detection. Check the
 # generated configuration, not just the switches passed to the build system.
 require_lines() { # file, then exact lines that must be present
@@ -210,9 +209,7 @@ require_lines() { # file, then exact lines that must be present
 
 # PNG's deflate; --disable-autodetect would otherwise leave it out.
 build_zlib() {
-    fetch "https://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz" \
-        "$ZLIB_SHA256" "$work/zlib.tar.gz"
-    tar xzf "$work/zlib.tar.gz" -C "$work"
+    clone https://github.com/madler/zlib.git "$ZLIB_TAG" "$ZLIB_COMMIT" "$zlib"
     if [ "$platform" = windows ]; then
         make -C "$zlib" -f win32/Makefile.gcc -j"$jobs" \
             CFLAGS="-O3 -flto" AR=gcc-ar libz.a
@@ -226,7 +223,7 @@ includedir=\${prefix}/include
 
 Name: zlib
 Description: zlib compression library
-Version: $ZLIB_VERSION
+Version: ${ZLIB_TAG#v}
 Libs: -L\${libdir} -lz
 Cflags: -I\${includedir}
 EOF
@@ -242,7 +239,7 @@ EOF
 }
 
 build_opus() {
-    clone https://github.com/xiph/opus.git "v$OPUS_VERSION" "$OPUS_COMMIT" "$work/opus"
+    clone https://github.com/xiph/opus.git "$OPUS_TAG" "$OPUS_COMMIT" "$work/opus"
     # Stack protector and fortify make opus link libssp on MinGW, which a static
     # FFmpeg would then have to find too.
     # FLOAT_APPROX is also the upstream Autoconf default on x86_64 (IEEE 754).
@@ -296,7 +293,7 @@ build_opus() {
 }
 
 build_dav1d() {
-    clone https://github.com/videolan/dav1d.git "$DAV1D_VERSION" "$DAV1D_COMMIT" "$work/dav1d"
+    clone https://github.com/videolan/dav1d.git "$DAV1D_TAG" "$DAV1D_COMMIT" "$work/dav1d"
     meson setup "$work/dav1d/build" "$work/dav1d" \
         --prefix="$prefix" \
         --libdir=lib \
@@ -317,7 +314,7 @@ build_dav1d() {
 }
 
 build_svtav1() {
-    clone https://github.com/AOMediaCodec/SVT-AV1.git "$SVTAV1_VERSION" "$SVTAV1_COMMIT" "$work/svt"
+    clone https://github.com/AOMediaCodec/SVT-AV1.git "$SVTAV1_TAG" "$SVTAV1_COMMIT" "$work/svt"
     # SVT-AV1 builds its SIMD code only when it is not C-only and its own test
     # compile found the architecture. On x86_64, AVX-512 is turned off if the
     # compiler lacks it. On arm64, each extension is turned off, in a variable
@@ -351,7 +348,7 @@ build_svtav1() {
 }
 
 build_libwebp() {
-    clone https://github.com/webmproject/libwebp.git "$LIBWEBP_VERSION" "$LIBWEBP_COMMIT" "$work/libwebp"
+    clone https://github.com/webmproject/libwebp.git "$LIBWEBP_TAG" "$LIBWEBP_COMMIT" "$work/libwebp"
     # The libraries alone. libwebp_anim needs libwebpmux as well as libwebp (and
     # the libsharpyuv it requires), found through the .pc files this installs.
     cmake -S "$work/libwebp" -B "$work/libwebp/build" -G Ninja "${cmake_common[@]}" \
@@ -382,11 +379,11 @@ build_libwebp() {
     cmake --build "$work/libwebp/build" --target install
 }
 
-echo "== zlib $ZLIB_VERSION, opus $OPUS_VERSION, dav1d $DAV1D_VERSION, SVT-AV1 $SVTAV1_VERSION, libwebp $LIBWEBP_VERSION"
+echo "== zlib $ZLIB_TAG, opus $OPUS_TAG, dav1d $DAV1D_TAG, SVT-AV1 $SVTAV1_TAG, libwebp $LIBWEBP_TAG"
 together build_zlib build_opus build_dav1d build_svtav1 build_libwebp
 
 echo "== FFmpeg $FFMPEG_VERSION"
-clone https://github.com/FFmpeg/FFmpeg.git "n$FFMPEG_VERSION" "$FFMPEG_COMMIT" "$work/ffmpeg"
+clone https://github.com/FFmpeg/FFmpeg.git "$FFMPEG_TAG" "$FFMPEG_COMMIT" "$work/ffmpeg"
 # The baseline every CPU of the platform has, and what is picked at run time on
 # top of it: AVX2 and AVX-512 on x86_64; dotprod and i8mm on Apple silicon, over
 # NEON. configure drops an extension the assembler cannot build, so config.h
@@ -598,12 +595,12 @@ cut_notice "$work/ffmpeg/libavutil/avsscanf.c" "DEALINGS IN THE SOFTWARE" ffmpeg
 cut_notice "$work/svt/Source/Lib/Codec/vector.c" "DEALINGS IN THE SOFTWARE" svt-vector.txt
 notices=(
     "FFmpeg $FFMPEG_VERSION (LGPL-2.1-or-later)|$work/ffmpeg/LICENSE.md|$work/ffmpeg/COPYING.LGPLv2.1|$work/notices/ffmpeg-oggdec.txt|$work/notices/ffmpeg-oggparsespeex.txt|$work/notices/ffmpeg-oggparsetheora.txt|$work/notices/ffmpeg-avsscanf.txt"
-    "dav1d $DAV1D_VERSION|$work/dav1d/COPYING"
+    "dav1d $DAV1D_TAG|$work/dav1d/COPYING"
     # SVT-AV1 compiles Edward Rosten's FAST corner detector into itself.
-    "SVT-AV1 $SVTAV1_VERSION|$work/svt/LICENSE.md|$work/svt/LICENSE-BSD2.md|$work/svt/PATENTS.md|$work/svt/third_party/fastfeat/LICENSE|$work/notices/svt-vector.txt"
-    "Opus $OPUS_VERSION|$work/opus/COPYING"
-    "libwebp $LIBWEBP_VERSION|$work/libwebp/COPYING|$work/libwebp/PATENTS"
-    "zlib $ZLIB_VERSION|$zlib/LICENSE"
+    "SVT-AV1 $SVTAV1_TAG|$work/svt/LICENSE.md|$work/svt/LICENSE-BSD2.md|$work/svt/PATENTS.md|$work/svt/third_party/fastfeat/LICENSE|$work/notices/svt-vector.txt"
+    "Opus $OPUS_TAG|$work/opus/COPYING"
+    "libwebp $LIBWEBP_TAG|$work/libwebp/COPYING|$work/libwebp/PATENTS"
+    "zlib $ZLIB_TAG|$zlib/LICENSE"
 )
 if [ "$arch" = x86_64 ]; then
     # FFmpeg, dav1d and SVT-AV1 each assemble their x86 code through a copy of

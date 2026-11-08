@@ -58,7 +58,7 @@ jobs:
           msystem: UCRT64
           update: true
           install: >-
-            base-devel git curl diffutils nasm
+            base-devel git diffutils nasm
             mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja
             mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-meson
 
@@ -106,7 +106,7 @@ jobs:
       # cannot name a version it was not built from.
       - name: Check the tag
         run: |
-          version=$(sed -n 's/^FFMPEG_VERSION=//p' build.sh)
+          version=$(sed -n 's/^FFMPEG_TAG=n//p' build.sh)
           [[ $GITHUB_REF_NAME == "$version"-[0-9]* ]] ||
             { echo "::error::tag $GITHUB_REF_NAME is not $version-<build>"; exit 1; }
 
