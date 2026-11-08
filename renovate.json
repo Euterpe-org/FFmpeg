@@ -1,0 +1,44 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommits", ":semanticCommitScopeDisabled"],
+  "commitMessageLowerCase": "never",
+  "commitMessageAction": "update",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^build\\.sh$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[\\w-]+) depName=(?<depName>\\S+) packageName=(?<packageName>\\S+)\\n\\w+_TAG=(?<currentValue>\\S+)\\n\\w+_COMMIT=(?<currentDigest>[0-9a-f]{40})\\n"
+      ],
+      "versioningTemplate": "regex:^[nv]?(?<major>\\d+)\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.github/workflows/build\\.yml$/"],
+      "matchStrings": [
+        "container: (?<depName>quay\\.io/pypa/manylinux[\\w.-]*):(?<currentValue>[\\w.-]+)@(?<currentDigest>sha256:[0-9a-f]{64})"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "regex:^(?<major>\\d{4})\\.(?<minor>\\d{2})\\.(?<patch>\\d{2})-(?<build>\\d+)$"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["github-tags"],
+      "semanticCommitType": "build",
+      "commitMessageTopic": "{{depName}}",
+      "commitMessageExtra": "to {{newValue}}"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "semanticCommitType": "ci"
+    },
+    {
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["docker"],
+      "semanticCommitType": "ci",
+      "commitMessageExtra": "to {{newValue}}"
+    }
+  ]
+}

@@ -3,8 +3,9 @@ name: build
 # Builds the minimal FFmpeg and ffprobe for each platform, proves each does the
 # work Press does (test.sh) and, on a tag, publishes them as a release; releases
 # are the only place they are kept. out/ is cached on a hash of build.sh, which
-# pins every input, so a tag on a commit main has already built reuses that
-# build. The cache is saved only when the job, so test.sh, passes.
+# pins every source, and on the Linux image, so a tag on a commit main has
+# already built reuses that build, and a new image builds again. The cache is
+# saved only when the job, so test.sh, passes.
 
 on:
   push:
@@ -50,7 +51,7 @@ jobs:
         id: cache
         with:
           path: out
-          key: ${{ matrix.platform }}-${{ hashFiles('build.sh') }}
+          key: ${{ matrix.platform }}-${{ hashFiles('build.sh') }}-${{ matrix.container }}
 
       - uses: msys2/setup-msys2@v2
         if: runner.os == 'Windows' && steps.cache.outputs.cache-hit != 'true'

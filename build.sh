@@ -56,16 +56,26 @@ fi
 # runners, and git.ffmpeg.org drops long clones) at a tag, written exactly as
 # upstream names it, and the checkout is held to the commit that tag stands
 # for.
+#
+# Renovate (renovate.json) moves each tag and its commit together, matching the
+# comment above them: keep the three lines together and in that order, and the
+# comment's fields as they are written.
+# renovate: datasource=github-tags depName=FFmpeg packageName=FFmpeg/FFmpeg
 FFMPEG_TAG=n9.0.2
 FFMPEG_COMMIT=946fcce07b6dcd0331c8cc609192aeff5e1924f8
+# renovate: datasource=github-tags depName=SVT-AV1 packageName=AOMediaCodec/SVT-AV1
 SVTAV1_TAG=v4.2.0
 SVTAV1_COMMIT=9292ec8e32bce26f781f277ec8739b53426c4300
+# renovate: datasource=github-tags depName=dav1d packageName=videolan/dav1d
 DAV1D_TAG=1.5.4
 DAV1D_COMMIT=54706fc6bc0cdecab7e9593974a4039cc038fca7
+# renovate: datasource=github-tags depName=libwebp packageName=webmproject/libwebp
 LIBWEBP_TAG=v1.6.0
 LIBWEBP_COMMIT=4fa21912338357f89e4fd51cf2368325b59e9bd9
+# renovate: datasource=github-tags depName=Opus packageName=xiph/opus
 OPUS_TAG=v1.6.1
 OPUS_COMMIT=22244de5a79bd1d6d623c32e72bf1954b56235be
+# renovate: datasource=github-tags depName=zlib packageName=madler/zlib
 ZLIB_TAG=v1.3.2
 ZLIB_COMMIT=da607da739fa6047df13e66a2af6b8bec7c2a498
 # The release tag (9.0.2-1), the source archive and NOTICE.txt name FFmpeg by
