@@ -76,8 +76,8 @@ LIBWEBP_COMMIT=4fa21912338357f89e4fd51cf2368325b59e9bd9
 OPUS_TAG=v1.6.1
 OPUS_COMMIT=22244de5a79bd1d6d623c32e72bf1954b56235be
 # renovate: datasource=github-tags depName=zlib packageName=madler/zlib
-ZLIB_TAG=v1.3.2
-ZLIB_COMMIT=da607da739fa6047df13e66a2af6b8bec7c2a498
+ZLIB_TAG=v1.4
+ZLIB_COMMIT=99623ef7097352da7993ba614161fd6a311e046e
 # The release tag (9.0.2-1), the source archive and NOTICE.txt name FFmpeg by
 # its version, without the n of its tags.
 FFMPEG_VERSION=${FFMPEG_TAG#n}
