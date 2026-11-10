@@ -38,13 +38,18 @@ run "${tone[@]}" -c:a pcm_s24le "$out/music/s24.wav"
 run "${tone[@]}" -c:a pcm_s32le "$out/music/s32.wav"
 run "${tone[@]}" -c:a pcm_f32le "$out/music/f32.wav"
 
-# A 64x48 test picture, and five frames of it for an animated GIF.
+# A 64x48 test picture, and five frames of it for an animated GIF. The animated
+# WebP has six, its second shown twice: libwebp encodes each frame whole and the
+# webp muxer gives each its own ANMF chunk, where libwebp_anim would merge the
+# repeat into the frame before.
 picture=(-f lavfi -i "testsrc2=size=64x48" -frames:v 1)
 run "${picture[@]}" "$out/cover/png.png"
 run "${picture[@]}" -c:v mjpeg -q:v 3 -pix_fmt yuvj420p "$out/cover/jpeg.jpg"
 run "${picture[@]}" -c:v libwebp -quality 60 "$out/cover/webp.webp"
 run "${picture[@]}" "$out/cover/gif.gif"
 run -f lavfi -i "testsrc2=size=64x48:rate=5:duration=1" -loop 0 "$out/cover/gif-animated.gif"
+run -f lavfi -i "testsrc2=size=64x48:rate=5:duration=1,loop=loop=1:size=1:start=2" \
+    -c:v libwebp -quality 60 -loop 0 "$out/cover/webp-animated.webp"
 
 # One second at 10 fps, 128x72 (SVT-AV1 wants at least 64 lines), with the
 # audio track each container usually carries; Press drops it.

@@ -28,9 +28,10 @@
 #            background videos downloaded from video sites or exported from
 #            editing software: mp4, mov, m4v, mkv, webm, avi carrying H.264,
 #            H.265, AV1, VP9, VP8, MPEG-4 Part 2 or ProRes (their audio is
-#            dropped, so no decoders for it); covers: png, jpg, static webp, gif.
+#            dropped, so no decoders for it); covers: png, jpg, webp and gif,
+#            the last two still or animated.
 #   outputs  Opus in Ogg; WebP through the webp muxer, libwebp for a still
-#            cover and libwebp_anim for an animated GIF; SVT-AV1 in MP4, or a
+#            cover and libwebp_anim for an animated one; SVT-AV1 in MP4, or a
 #            conforming source stream copied into MP4; f32le PCM down a pipe.
 #   checks   `-f null` with no codec chosen falls back to wrapped_avframe and
 #            pcm_s16le, so the decode check needs both; frames are read back
@@ -83,13 +84,15 @@ ZLIB_COMMIT=99623ef7097352da7993ba614161fd6a311e046e
 FFMPEG_VERSION=${FFMPEG_TAG#n}
 
 # FFmpeg's own `av1` decoder is hardware-only, so libdav1d decodes AV1 and the
-# native one is left out. JPEG pictures are decoded by `mjpeg`; `webp` selects
-# vp8 and `mpeg4` selects h263. mp3float is the decoder FFmpeg picks for MP3.
+# native one is left out. JPEG pictures are decoded by `mjpeg`; `webp` and
+# `webp_anim` select vp8, and `mpeg4` selects h263. mp3float is the decoder
+# FFmpeg picks for MP3. A WebP whose VP8X chunk says it is animated is read by
+# the webp_anim demuxer and decoder, any other by image_webp_pipe and `webp`.
 DECODERS=mp3float,aac,alac,flac,opus,vorbis,pcm_s16le,pcm_s24le,pcm_s32le,pcm_f32le,\
 h264,hevc,libdav1d,vp9,vp8,mpeg4,prores,\
-png,mjpeg,webp,gif
+png,mjpeg,webp,webp_anim,gif
 DEMUXERS=mp3,mov,aac,flac,ogg,wav,matroska,avi,\
-image2,image_png_pipe,image_jpeg_pipe,image_webp_pipe,gif
+image2,image_png_pipe,image_jpeg_pipe,image_webp_pipe,webp_anim,gif
 PARSERS=mpegaudio,aac,flac,opus,vorbis,h264,hevc,av1,vp9,vp8,mpeg4video,\
 png,mjpeg,webp,gif
 # libavformat uses extract_extradata while probing; the MP4 muxer selects the

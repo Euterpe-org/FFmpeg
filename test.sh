@@ -42,13 +42,10 @@ rotation() { # file: the display matrix's rotation in degrees, 0 without one
         -of csv=p=0 "$1" | tr -d '\r,')
     echo "${r:-0}"
 }
-# An animated WebP's canvas, from its VP8X chunk: 24-bit width-1 and height-1
-# little-endian at offset 24. FFmpeg cannot decode animated WebP, so this and
-# the frame chunks are what can be checked. BSD od ends with a blank line, where
-# its offset would be.
-canvas() {
-    od -An -tu1 -j24 -N6 "$1" |
-        awk 'NF && !done { printf "%d,%d", $1 + $2 * 256 + $3 * 65536 + 1, $4 + $5 * 256 + $6 * 65536 + 1; done = 1 }'
+# The ANMF chunks in a WebP, one per frame of an animated one. A still WebP has
+# none, where grep fails; BSD wc pads its count.
+anmf() {
+    echo $(($({ grep -ao ANMF "$1" || true; } | wc -l)))
 }
 listed() { # flag name: the component appears in the listing
     "$ffmpeg" -hide_banner "$1" | awk '{ print $2 }' | tr ',' '\n' | grep -qx "$2" ||
@@ -60,7 +57,7 @@ listed() { # flag name: the component appears in the listing
 for name in libopus libsvtav1 libwebp libwebp_anim pcm_f32le pcm_s16le wrapped_avframe rawvideo; do
     listed -encoders "$name"
 done
-listed -decoders libdav1d
+for name in libdav1d webp_anim; do listed -decoders "$name"; done
 for name in ogg mp4 webp f32le null rawvideo; do listed -muxers "$name"; done
 for name in aresample atrim asetpts crop scale format fps; do listed -filters "$name"; done
 
@@ -81,16 +78,34 @@ done
 for source in "$fixtures"/cover/*; do
     name=${source##*/}
     out=$work/$name.webp
+    run -i "$source" -f null -
+    # An animated fixture decodes to more than one frame, and a WebP to one
+    # for each ANMF chunk, so the frame webp-animated.webp repeats comes out
+    # twice. A still WebP has no ANMF chunk and decodes to one.
     count=$(frames "$source")
+    case $name in
+        *-animated.*) test "$count" -gt 1 || fail "$name decodes to $count frames" ;;
+    esac
+    case $name in
+        *.webp)
+            chunks=$(anmf "$source")
+            test "$count" -eq $((chunks > 0 ? chunks : 1)) ||
+                fail "$name decodes to $count frames from $chunks ANMF chunks"
+            ;;
+    esac
     if [ "$count" -gt 1 ]; then
-        # An animated GIF stays animated, every frame cropped alike. libwebp
-        # merges a frame identical to the one before into its duration, so
-        # the WebP may hold fewer frames than the GIF, but never just one.
+        # An animated GIF or WebP stays animated, every frame cropped alike.
+        # libwebp merges a frame identical to the one before into its duration,
+        # so the WebP written may hold fewer frames than the source, but never
+        # just one, and it decodes to as many frames as it holds.
         run -i "$source" -vf "format=rgba,crop=7:5:3:1:exact=1" \
             -c:v libwebp_anim -q:v 90 -pix_fmt bgra -loop 0 -f webp "$out"
-        test "$(canvas "$out")" = "7,5" || fail "$name canvas is $(canvas "$out")"
-        written=$(grep -ao ANMF "$out" | wc -l)
+        written=$(anmf "$out")
         test "$written" -gt 1 || fail "$name lost its animation"
+        test "$(field v:0 codec_name,width,height "$out")" = "webp_anim,7,5" || fail "$name"
+        decoded=$(frames "$out")
+        test "$decoded" -eq "$written" || fail "$name came out as $decoded frames in $written ANMF chunks"
+        run -i "$out" -f null -
         echo "cover  $name -> 7x5 animated webp, $count frames in $written"
     else
         run -i "$source" -frames:v 1 -vf "format=rgba,crop=7:5:3:1:exact=1" \
