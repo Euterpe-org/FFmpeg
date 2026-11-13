@@ -132,18 +132,16 @@ for source in "$fixtures"/video/*; do
     frame=$(run -i "$out" -frames:v 1 -f rawvideo -pix_fmt rgb24 pipe:1 | wc -c)
     test "$frame" -eq $((${size%,*} * ${size#*,} * 3)) || fail "$name frame is $frame bytes"
     run -i "$out" -f null -
-    # A conforming H.264/H.265/AV1 source is kept by a stream copy when AV1 does
-    # not come out smaller, so that path has to work as well.
+    # An AV1 source is not encoded again but copied into MP4 as it is.
     kept=
     codec=$(field v:0 codec_name "$source")
-    case $codec in h264 | hevc | av1)
+    if [ "$codec" = av1 ]; then
         copy=$work/$name.copy.mp4
         run -i "$source" -map 0:v:0 -an -sn -dn -c:v copy -movflags +faststart -f mp4 "$copy"
-        test "$(field v:0 codec_name "$copy")" = "$codec" || fail "$name copy"
+        test "$(field v:0 codec_name "$copy")" = av1 || fail "$name copy"
         run -i "$copy" -f null -
-        kept=", copied as $codec"
-        ;;
-    esac
+        kept=", copied"
+    fi
     echo "video  $name ($codec) -> av1 ${size/,/x}$kept"
 done
 

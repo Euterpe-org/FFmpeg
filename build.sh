@@ -31,8 +31,9 @@
 #            dropped, so no decoders for it); covers: png, jpg, webp and gif,
 #            the last two still or animated.
 #   outputs  Opus in Ogg; WebP through the webp muxer, libwebp for a still
-#            cover and libwebp_anim for an animated one; SVT-AV1 in MP4, or a
-#            conforming source stream copied into MP4; f32le PCM down a pipe.
+#            cover and libwebp_anim for an animated one; AV1 in MP4, encoded
+#            by SVT-AV1 or, from an AV1 source, copied as it is; f32le PCM
+#            down a pipe.
 #   checks   `-f null` with no codec chosen falls back to wrapped_avframe and
 #            pcm_s16le, so the decode check needs both; frames are read back
 #            as rawvideo.
