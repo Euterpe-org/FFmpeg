@@ -69,8 +69,8 @@ FFMPEG_COMMIT=946fcce07b6dcd0331c8cc609192aeff5e1924f8
 SVTAV1_TAG=v4.3.0
 SVTAV1_COMMIT=e3d63405f9ba8219913a7276c2c47d10e5d022fe
 # renovate: datasource=github-tags depName=dav1d packageName=videolan/dav1d
-DAV1D_TAG=1.5.4
-DAV1D_COMMIT=54706fc6bc0cdecab7e9593974a4039cc038fca7
+DAV1D_TAG=1.5.5
+DAV1D_COMMIT=6c7bee685677fd997a431302be4fea8ea4017606
 # renovate: datasource=github-tags depName=libwebp packageName=webmproject/libwebp
 LIBWEBP_TAG=v1.6.0
 LIBWEBP_COMMIT=4fa21912338357f89e4fd51cf2368325b59e9bd9
