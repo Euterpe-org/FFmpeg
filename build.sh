@@ -607,8 +607,38 @@ cut_notice "$work/ffmpeg/libavformat/oggparsespeex.c" "DEALINGS IN THE SOFTWARE"
 cut_notice "$work/ffmpeg/libavformat/oggparsetheora.c" "DEALINGS IN THE SOFTWARE" ffmpeg-oggparsetheora.txt
 cut_notice "$work/ffmpeg/libavutil/avsscanf.c" "DEALINGS IN THE SOFTWARE" ffmpeg-avsscanf.txt
 cut_notice "$work/svt/Source/Lib/Codec/vector.c" "DEALINGS IN THE SOFTWARE" svt-vector.txt
+# libswresample converts DSD to PCM with code based on Sebastian Gesemann's
+# dsd2pcm, which is BSD-licensed. FFmpeg's copy keeps his copyright line but
+# not the licence, so that is written here as dsd2pcm's own source states it.
+cat > "$work/notices/ffmpeg-dsd2pcm.txt" <<'EOF'
+Copyright 2009, 2011 Sebastian Gesemann. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are
+permitted provided that the following conditions are met:
+
+   1. Redistributions of source code must retain the above copyright notice, this list of
+      conditions and the following disclaimer.
+
+   2. Redistributions in binary form must reproduce the above copyright notice, this list
+      of conditions and the following disclaimer in the documentation and/or other materials
+      provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY SEBASTIAN GESEMANN ''AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SEBASTIAN GESEMANN OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+The views and conclusions contained in the software and documentation are those of the
+authors and should not be interpreted as representing official policies, either expressed
+or implied, of Sebastian Gesemann.
+EOF
 notices=(
-    "FFmpeg $FFMPEG_VERSION (LGPL-2.1-or-later)|$work/ffmpeg/LICENSE.md|$work/ffmpeg/COPYING.LGPLv2.1|$work/notices/ffmpeg-oggdec.txt|$work/notices/ffmpeg-oggparsespeex.txt|$work/notices/ffmpeg-oggparsetheora.txt|$work/notices/ffmpeg-avsscanf.txt"
+    "FFmpeg $FFMPEG_VERSION (LGPL-2.1-or-later)|$work/ffmpeg/LICENSE.md|$work/ffmpeg/COPYING.LGPLv2.1|$work/notices/ffmpeg-oggdec.txt|$work/notices/ffmpeg-oggparsespeex.txt|$work/notices/ffmpeg-oggparsetheora.txt|$work/notices/ffmpeg-avsscanf.txt|$work/notices/ffmpeg-dsd2pcm.txt"
     "dav1d $DAV1D_TAG|$work/dav1d/COPYING"
     # SVT-AV1 compiles Edward Rosten's FAST corner detector into itself.
     "SVT-AV1 $SVTAV1_TAG|$work/svt/LICENSE.md|$work/svt/LICENSE-BSD2.md|$work/svt/PATENTS.md|$work/svt/third_party/fastfeat/LICENSE|$work/notices/svt-vector.txt"
