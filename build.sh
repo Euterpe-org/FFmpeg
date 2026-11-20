@@ -66,8 +66,8 @@ fi
 FFMPEG_TAG=n9.0.2
 FFMPEG_COMMIT=946fcce07b6dcd0331c8cc609192aeff5e1924f8
 # renovate: datasource=github-tags depName=SVT-AV1 packageName=AOMediaCodec/SVT-AV1
-SVTAV1_TAG=v4.3.0
-SVTAV1_COMMIT=e3d63405f9ba8219913a7276c2c47d10e5d022fe
+SVTAV1_TAG=v4.3.1
+SVTAV1_COMMIT=462771f87694e959cc1d3f9addde23d7015662e3
 # renovate: datasource=github-tags depName=dav1d packageName=videolan/dav1d
 DAV1D_TAG=1.5.5
 DAV1D_COMMIT=6c7bee685677fd997a431302be4fea8ea4017606
