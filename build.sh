@@ -63,8 +63,8 @@ fi
 # comment above them: keep the three lines together and in that order, and the
 # comment's fields as they are written.
 # renovate: datasource=github-tags depName=FFmpeg packageName=FFmpeg/FFmpeg
-FFMPEG_TAG=n9.0.2
-FFMPEG_COMMIT=946fcce07b6dcd0331c8cc609192aeff5e1924f8
+FFMPEG_TAG=n9.1
+FFMPEG_COMMIT=74e4393595cf2b5857f0da925c4e0dd74ea306e5
 # renovate: datasource=github-tags depName=SVT-AV1 packageName=AOMediaCodec/SVT-AV1
 SVTAV1_TAG=v4.3.0
 SVTAV1_COMMIT=e3d63405f9ba8219913a7276c2c47d10e5d022fe
