@@ -26,11 +26,10 @@ run() {
     # SVT-AV1 prints its banner past -v error.
     "$ffmpeg" -hide_banner -nostdin -v error -xerror -y "$@" 2> >(grep -v '^Svt\[' >&2)
 }
-# One stream's fields, e.g. `field a:0 codec_name file`. A stream with side data
-# (a rotation) gets an empty trailing column, and Windows adds a CR.
+# One stream's fields, e.g. `field a:0 codec_name file`; Windows adds a CR.
 field() {
     "$ffprobe" -v error -select_streams "$1" -show_entries "stream=$2" -of csv=p=0 "$3" |
-        tr -d '\r' | head -1 | sed 's/,*$//'
+        tr -d '\r' | head -1
 }
 frames() { # file: the number of video frames it decodes to
     "$ffprobe" -v error -count_frames -select_streams v:0 -show_entries stream=nb_read_frames \
