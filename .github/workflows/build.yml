@@ -27,7 +27,7 @@ jobs:
             os: ubuntu-latest
             # glibc 2.28 is the oldest system the result runs on; pinned by
             # digest so the same build.sh meets the same toolchain.
-            container: quay.io/pypa/manylinux_2_28_x86_64:2026.11.14-1@sha256:d086f64cddcace250ef0f0073583c51b8298159303290a730c9f59bd91edfd2c
+            container: quay.io/pypa/manylinux_2_28_x86_64:2026.11.21-1@sha256:55a36963bc0504cdf004011001c1072306402f0b8b83be5a5eba7068f93eec53
             shell: bash
           # Apple silicon, named like the others for Rust's target_os and
           # target_arch: aarch64, where macOS itself says arm64. The newest
